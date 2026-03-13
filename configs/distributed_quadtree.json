@@ -1,0 +1,13 @@
+{
+  "n_items": 2000000,
+  "n_partitions": 8,
+  "n_point_queries": 500,
+  "n_queries": 500,
+  "seed": 1,
+  "space_width": 10000.0,
+  "space_height": 10000.0,
+  "max_query_width": 500.0,
+  "max_query_height": 500.0,
+  "bucket_capacity": 16,
+  "max_depth": 20
+}

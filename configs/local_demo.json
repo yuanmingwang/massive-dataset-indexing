@@ -1,0 +1,81 @@
+{
+  "local_bplustree": {
+    "n_items": 2000000,
+    "key_min": 0,
+    "key_max": 1000000,
+    "allow_duplicates": true,
+    "seed": 1,
+    "tree_order": 16,
+    "n_point_queries": 500,
+    "n_range_queries": 500,
+    "range_low_min": 0,
+    "range_low_max": 900000,
+    "range_max_width": 50000
+  },
+  "local_rtree": {
+    "n_items": 2000000,
+    "space_width": 10000.0,
+    "space_height": 10000.0,
+    "max_rect_width": 120.0,
+    "max_rect_height": 120.0,
+    "seed": 1,
+    "max_entries": 16,
+    "n_point_queries": 500,
+    "n_queries": 500,
+    "max_query_width": 600.0,
+    "max_query_height": 600.0
+  },
+  "local_kdtree": {
+    "n_items": 2000000,
+    "space_width": 10000.0,
+    "space_height": 10000.0,
+    "seed": 1,
+    "n_point_queries": 500,
+    "n_queries": 500,
+    "max_query_width": 500.0,
+    "max_query_height": 500.0
+  },
+  "local_quadtree": {
+    "n_items": 2000000,
+    "space_width": 10000.0,
+    "space_height": 10000.0,
+    "seed": 1,
+    "n_point_queries": 500,
+    "n_queries": 500,
+    "max_query_width": 500.0,
+    "max_query_height": 500.0,
+    "bucket_capacity": 16,
+    "max_depth": 20
+  },
+  "local_comparison": {
+    "bplustree": {
+      "n_items": 20000,
+      "key_min": 0,
+      "key_max": 1000000,
+      "allow_duplicates": true,
+      "seed": 1,
+      "orders": [
+        8,
+        16,
+        32
+      ],
+      "n_queries": 500
+    },
+    "rtree": {
+      "n_items": 20000,
+      "space_width": 10000.0,
+      "space_height": 10000.0,
+      "max_rect_width": 100.0,
+      "max_rect_height": 100.0,
+      "seed": 1,
+      "capacities": [
+        6,
+        12,
+        24
+      ],
+      "n_queries": 500,
+      "max_query_width": 500.0,
+      "max_query_height": 500.0
+    }
+  }
+}

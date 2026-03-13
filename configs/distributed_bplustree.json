@@ -1,0 +1,13 @@
+{
+  "n_records": 2000000,
+  "n_partitions": 8,
+  "tree_order": 16,
+  "n_point_queries": 500,
+  "n_range_queries": 500,
+  "seed": 1,
+  "key_min": 0,
+  "key_max": 1000000,
+  "range_low_min": 0,
+  "range_low_max": 900000,
+  "range_max_width": 50000
+}
