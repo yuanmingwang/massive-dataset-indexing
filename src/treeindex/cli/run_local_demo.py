@@ -50,20 +50,17 @@ def main() -> None:
     pretty_print_results(rows)
     report_sections.append((title, rows))
 
-    title = "=== Local comparison: B+ Tree orders ==="
     comparison_config = config.get("local_comparison", {})
-    bpt_results, rtree_results = local_comparison_demo(
+    comparison_sections = local_comparison_demo(
         comparison_config.get("bplustree"),
         comparison_config.get("rtree"),
+        comparison_config.get("kdtree"),
+        comparison_config.get("quadtree"),
     )
-    print(f"\n{title}")
-    pretty_print_results(bpt_results)
-    report_sections.append((title, bpt_results))
-
-    title = "=== Local comparison: R-Tree capacities ==="
-    print(f"\n{title}")
-    pretty_print_results(rtree_results)
-    report_sections.append((title, rtree_results))
+    for title, rows in comparison_sections:
+        print(f"\n{title}")
+        pretty_print_results(rows)
+        report_sections.append((title, rows))
 
     report_text = "\n\n".join(f"{section_title}\n{render_results_table(section_rows)}" for section_title, section_rows in report_sections)
     txt_path = write_text_report(

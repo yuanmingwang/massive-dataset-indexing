@@ -181,6 +181,44 @@ The demos now read their default parameters from JSON config files in `configs/`
 - `configs/distributed_quadtree.json`
 - `configs/distributed_rtree.json`
 
+`configs/local_demo.json` contains one section per local experiment: `local_bplustree`, `local_rtree`, `local_kdtree`, `local_quadtree`, and `local_comparison`. The `local_comparison` section now includes `bplustree`, `rtree`, `kdtree`, and `quadtree` comparison sweeps.
+
+### Config parameter reference
+
+Shared parameters:
+- `n_items` / `n_records`: number of generated records before building the index.
+- `seed`: base random seed for reproducible data generation and query sampling.
+- `n_point_queries`: number of exact point or point-location queries to run.
+- `n_queries`: number of spatial range/intersection queries to run.
+- `n_range_queries`: number of B+ tree key-range queries to run.
+- `n_partitions`: number of Spark partitions used by distributed runs.
+
+B+ Tree parameters:
+- `key_min`, `key_max`: minimum and maximum generated key values.
+- `allow_duplicates`: whether multiple records may share the same key.
+- `tree_order`: B+ tree fanout / node capacity setting.
+- `range_low_min`, `range_low_max`: bounds for sampling the lower endpoint of generated range queries.
+- `range_max_width`: maximum width of a generated B+ tree range query.
+- `orders`: list of B+ tree order values used in the local comparison sweep.
+
+Spatial parameters used by R-tree, KD-tree, and Quadtree:
+- `space_width`, `space_height`: width and height of the synthetic 2D data space.
+- `max_query_width`, `max_query_height`: maximum size of generated rectangle queries.
+
+KD-tree-specific parameters:
+- `leaf_capacity`: maximum number of points stored in a KD-tree leaf bucket before splitting.
+- `leaf_capacities`: list of KD-tree leaf capacities used in the local comparison sweep.
+
+R-tree-specific parameters:
+- `max_rect_width`, `max_rect_height`: maximum size of generated rectangles in the dataset.
+- `max_entries`: maximum number of entries per R-tree node before a split.
+- `capacities`: list of `max_entries` values used in the local comparison sweep.
+
+Quadtree-specific parameters:
+- `bucket_capacity`: maximum number of points stored in a leaf before subdivision.
+- `bucket_capacities`: list of quadtree bucket capacities used in the local comparison sweep.
+- `max_depth`: maximum allowed quadtree depth.
+
 For routine changes, edit those files directly instead of changing Python code or passing many CLI flags.
 
 All distributed runners also save the final experiment summary automatically to `results/` as both `.txt` and `.json` files, so the output is preserved even if Spark logs scroll past it. Use `--output-dir <path>` to write those files somewhere else.

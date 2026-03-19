@@ -1,18 +1,7 @@
 {
-  "_comment": "Documentation-only fields such as _comment and _param_help are ignored by the code.",
-  "_param_help": {
-    "n_items": "Number of 2D points generated before Spark distributes them.",
-    "n_partitions": "Number of Spark partitions used for the distributed KD-tree build.",
-    "n_point_queries": "Number of exact point queries to run in the distributed benchmark.",
-    "n_queries": "Number of rectangle range queries to run in the distributed benchmark.",
-    "seed": "Random seed for point generation and query sampling.",
-    "space_width": "Width of the global 2D point space.",
-    "space_height": "Height of the global 2D point space.",
-    "max_query_width": "Maximum width of generated rectangle range queries.",
-    "max_query_height": "Maximum height of generated rectangle range queries."
-  },
   "n_items": 2000000,
   "n_partitions": 8,
+  "leaf_capacity": 16,
   "n_point_queries": 500,
   "n_queries": 500,
   "seed": 1,

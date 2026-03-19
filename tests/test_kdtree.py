@@ -53,6 +53,25 @@ class KDTreeLocalTest(unittest.TestCase):
         tree.insert(Point(3.0, 3.0), 30)
         self.assertEqual(sorted(tree.query(Rect(0.0, 0.0, 5.0, 5.0))), [10, 30])
 
+    def test_leaf_capacity_preserves_results(self) -> None:
+        items = [
+            (Point(1.0, 1.0), 1),
+            (Point(2.0, 4.0), 2),
+            (Point(5.0, 3.0), 3),
+            (Point(7.0, 8.0), 4),
+            (Point(9.0, 2.0), 5),
+            (Point(6.0, 6.0), 6),
+        ]
+        query = Rect(0.0, 0.0, 6.5, 6.5)
+
+        tree_small = KDTree(leaf_capacity=1)
+        tree_small.build(items)
+        tree_large = KDTree(leaf_capacity=3)
+        tree_large.build(items)
+
+        self.assertEqual(sorted(tree_small.query(query)), sorted(tree_large.query(query)))
+        self.assertLessEqual(tree_large.height(), tree_small.height())
+
 
 class KDTreePartitioningTest(unittest.TestCase):
     def test_grid_dimensions_cover_requested_partitions(self) -> None:
@@ -104,7 +123,7 @@ class KDTreeSparkTest(unittest.TestCase):
         local_tree = KDTree()
         local_tree.build(items)
 
-        distributed_tree = DistributedKDTree(self.spark, n_partitions=4)
+        distributed_tree = DistributedKDTree(self.spark, n_partitions=4, leaf_capacity=3)
         build_s = distributed_tree.build(self.spark.sparkContext.parallelize(items, 4))
 
         self.assertGreater(build_s, 0.0)
@@ -135,6 +154,7 @@ class KDTreeSparkTest(unittest.TestCase):
             self.spark,
             items,
             n_partitions=4,
+            leaf_capacity=3,
             point_queries=[point for point, _ in items[:3]],
             queries=queries,
         )
@@ -145,6 +165,7 @@ class KDTreeSparkTest(unittest.TestCase):
         for row in rows:
             self.assertEqual(row.algorithm, "DistributedKDTree")
             self.assertEqual(row.n_items, len(items))
+            self.assertIn("leaf_capacity", row.extra)
             self.assertIn("n_partitions", row.extra)
             self.assertIn("partition_heights", row.extra)
 

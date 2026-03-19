@@ -55,6 +55,7 @@ DEFAULT_LOCAL_KDTREE_CONFIG = {
     "n_queries": 400,
     "max_query_width": 500.0,
     "max_query_height": 500.0,
+    "leaf_capacity": 1,
 }
 
 DEFAULT_LOCAL_QUADTREE_CONFIG = {
@@ -71,26 +72,56 @@ DEFAULT_LOCAL_QUADTREE_CONFIG = {
 }
 
 DEFAULT_LOCAL_COMPARISON_BPT_CONFIG = {
-    "n_items": 30000,
+    "n_items": 2_000_000,
     "key_min": 0,
-    "key_max": 1_000_000,
+    "key_max": 10_000_000,
     "allow_duplicates": True,
-    "seed": 21,
-    "orders": [8, 16, 32],
-    "n_queries": 800,
+    "seed": 1,
+    "orders": [16, 32, 64],
+    "n_point_queries": 500,
+    "n_range_queries": 500,
+    "range_low_min": 0,
+    "range_low_max": 9_000_000,
+    "range_max_width": 500_000,
 }
 
 DEFAULT_LOCAL_COMPARISON_RTREE_CONFIG = {
-    "n_items": 20000,
-    "space_width": 10_000.0,
-    "space_height": 10_000.0,
-    "max_rect_width": 100.0,
-    "max_rect_height": 100.0,
-    "seed": 31,
-    "capacities": [6, 12, 24],
+    "n_items": 2_000_000,
+    "space_width": 100_000.0,
+    "space_height": 100_000.0,
+    "max_rect_width": 1_200.0,
+    "max_rect_height": 1_200.0,
+    "seed": 1,
+    "capacities": [16, 32, 64],
+    "n_point_queries": 500,
     "n_queries": 500,
-    "max_query_width": 500.0,
-    "max_query_height": 500.0,
+    "max_query_width": 6_000.0,
+    "max_query_height": 6_000.0,
+}
+
+DEFAULT_LOCAL_COMPARISON_KDTREE_CONFIG = {
+    "n_items": 2_000_000,
+    "space_width": 100_000.0,
+    "space_height": 100_000.0,
+    "seed": 1,
+    "leaf_capacities": [16, 32, 64],
+    "n_point_queries": 500,
+    "n_queries": 500,
+    "max_query_width": 5_000.0,
+    "max_query_height": 5_000.0,
+}
+
+DEFAULT_LOCAL_COMPARISON_QUADTREE_CONFIG = {
+    "n_items": 2_000_000,
+    "space_width": 100_000.0,
+    "space_height": 100_000.0,
+    "seed": 1,
+    "bucket_capacities": [16, 32, 64],
+    "n_point_queries": 500,
+    "n_queries": 500,
+    "max_query_width": 5_000.0,
+    "max_query_height": 5_000.0,
+    "max_depth": 20,
 }
 
 
@@ -194,20 +225,21 @@ def local_kdtree_demo(config: dict | None = None):
         max_query_height=cfg["max_query_height"],
         seed=cfg["seed"] + 2,
     )
+    leaf_capacity = cfg["leaf_capacity"]
     return [
         run_single_experiment(
-            index_factory=KDTree,
+            index_factory=lambda: KDTree(leaf_capacity=leaf_capacity),
             items=items,
             queries=point_queries,
             workload_name="kdtree-point",
-            extra={"dims": 2, "query_type": "point"},
+            extra={"dims": 2, "leaf_capacity": leaf_capacity, "query_type": "point"},
         ),
         run_single_experiment(
-            index_factory=KDTree,
+            index_factory=lambda: KDTree(leaf_capacity=leaf_capacity),
             items=items,
             queries=queries,
             workload_name="kdtree-range",
-            extra={"dims": 2, "query_type": "rect-range"},
+            extra={"dims": 2, "leaf_capacity": leaf_capacity, "query_type": "rect-range"},
         )
     ]
 
@@ -253,23 +285,43 @@ def local_quadtree_demo(config: dict | None = None):
 def local_comparison_demo(
     bpt_config: dict | None = None,
     rtree_config: dict | None = None,
+    kdtree_config: dict | None = None,
+    quadtree_config: dict | None = None,
 ):
     bpt_cfg = _merge_config(DEFAULT_LOCAL_COMPARISON_BPT_CONFIG, bpt_config)
-    items = generate_key_value_pairs(
+    bpt_items = generate_key_value_pairs(
         bpt_cfg["n_items"],
         key_min=bpt_cfg["key_min"],
         key_max=bpt_cfg["key_max"],
         allow_duplicates=bpt_cfg["allow_duplicates"],
         seed=bpt_cfg["seed"],
     )
-    keys = [k for k, _ in items]
-    point_queries = sample_point_queries(keys, num_queries=bpt_cfg["n_queries"], seed=bpt_cfg["seed"] + 1)
+    bpt_keys = [k for k, _ in bpt_items]
+    bpt_point_queries = sample_point_queries(
+        bpt_keys,
+        num_queries=bpt_cfg["n_point_queries"],
+        seed=bpt_cfg["seed"] + 1,
+    )
+    bpt_range_queries = sample_range_queries(
+        num_queries=bpt_cfg["n_range_queries"],
+        low_min=bpt_cfg["range_low_min"],
+        low_max=bpt_cfg["range_low_max"],
+        max_width=bpt_cfg["range_max_width"],
+        seed=bpt_cfg["seed"] + 2,
+    )
+    bpt_factories = [lambda order=order: BPlusTree(order=order) for order in bpt_cfg["orders"]]
     bpt_results = compare_indexes(
+        index_factories=bpt_factories,
+        items=bpt_items,
+        queries=bpt_point_queries,
+        workload_name="compare-bpt-point",
+        extra_builder=lambda idx: {"order": idx.order, "height": idx.height(), "query_type": "point"},
+    ) + compare_indexes(
         index_factories=[lambda order=order: BPlusTree(order=order) for order in bpt_cfg["orders"]],
-        items=items,
-        queries=point_queries,
-        workload_name="compare-bpt-orders",
-        extra_builder=lambda idx: {"order": idx.order, "height": idx.height()},
+        items=bpt_items,
+        queries=bpt_range_queries,
+        workload_name="compare-bpt-range",
+        extra_builder=lambda idx: {"order": idx.order, "height": idx.height(), "query_type": "range"},
     )
 
     rtree_cfg = _merge_config(DEFAULT_LOCAL_COMPARISON_RTREE_CONFIG, rtree_config)
@@ -281,19 +333,135 @@ def local_comparison_demo(
         max_rect_height=rtree_cfg["max_rect_height"],
         seed=rtree_cfg["seed"],
     )
+    rect_point_queries = sample_rect_point_queries(
+        [rect for rect, _ in rect_items],
+        num_queries=rtree_cfg["n_point_queries"],
+        seed=rtree_cfg["seed"] + 1,
+    )
     rect_queries = sample_rect_queries(
         num_queries=rtree_cfg["n_queries"],
         space_width=rtree_cfg["space_width"],
         space_height=rtree_cfg["space_height"],
         max_query_width=rtree_cfg["max_query_width"],
         max_query_height=rtree_cfg["max_query_height"],
-        seed=rtree_cfg["seed"] + 1,
+        seed=rtree_cfg["seed"] + 2,
     )
+    rtree_factories = [lambda max_entries=max_entries: RTree(max_entries=max_entries) for max_entries in rtree_cfg["capacities"]]
     rtree_results = compare_indexes(
+        index_factories=rtree_factories,
+        items=rect_items,
+        queries=rect_point_queries,
+        workload_name="compare-rtree-point",
+        extra_builder=lambda idx: {"max_entries": idx.max_entries, "height": idx.height(), "query_type": "point-location"},
+    ) + compare_indexes(
         index_factories=[lambda max_entries=max_entries: RTree(max_entries=max_entries) for max_entries in rtree_cfg["capacities"]],
         items=rect_items,
         queries=rect_queries,
         workload_name="compare-rtree-capacity",
-        extra_builder=lambda idx: {"max_entries": idx.max_entries, "height": idx.height()},
+        extra_builder=lambda idx: {"max_entries": idx.max_entries, "height": idx.height(), "query_type": "rect-intersection"},
     )
-    return bpt_results, rtree_results
+
+    kdtree_cfg = _merge_config(DEFAULT_LOCAL_COMPARISON_KDTREE_CONFIG, kdtree_config)
+    kd_items = generate_points(
+        kdtree_cfg["n_items"],
+        space_width=kdtree_cfg["space_width"],
+        space_height=kdtree_cfg["space_height"],
+        seed=kdtree_cfg["seed"],
+    )
+    kd_points = [point for point, _ in kd_items]
+    kd_point_queries = sample_exact_point_queries(
+        kd_points,
+        num_queries=kdtree_cfg["n_point_queries"],
+        seed=kdtree_cfg["seed"] + 1,
+    )
+    kd_range_queries = sample_point_rect_queries(
+        num_queries=kdtree_cfg["n_queries"],
+        space_width=kdtree_cfg["space_width"],
+        space_height=kdtree_cfg["space_height"],
+        max_query_width=kdtree_cfg["max_query_width"],
+        max_query_height=kdtree_cfg["max_query_height"],
+        seed=kdtree_cfg["seed"] + 2,
+    )
+    kd_factories = [
+        lambda leaf_capacity=leaf_capacity: KDTree(leaf_capacity=leaf_capacity)
+        for leaf_capacity in kdtree_cfg["leaf_capacities"]
+    ]
+    kdtree_results = compare_indexes(
+        index_factories=kd_factories,
+        items=kd_items,
+        queries=kd_point_queries,
+        workload_name="compare-kdtree-point",
+        extra_builder=lambda idx: {"leaf_capacity": idx.leaf_capacity, "height": idx.height(), "query_type": "point"},
+    ) + compare_indexes(
+        index_factories=[
+            lambda leaf_capacity=leaf_capacity: KDTree(leaf_capacity=leaf_capacity)
+            for leaf_capacity in kdtree_cfg["leaf_capacities"]
+        ],
+        items=kd_items,
+        queries=kd_range_queries,
+        workload_name="compare-kdtree-range",
+        extra_builder=lambda idx: {"leaf_capacity": idx.leaf_capacity, "height": idx.height(), "query_type": "rect-range"},
+    )
+
+    quadtree_cfg = _merge_config(DEFAULT_LOCAL_COMPARISON_QUADTREE_CONFIG, quadtree_config)
+    quad_items = generate_points(
+        quadtree_cfg["n_items"],
+        space_width=quadtree_cfg["space_width"],
+        space_height=quadtree_cfg["space_height"],
+        seed=quadtree_cfg["seed"],
+    )
+    quad_points = [point for point, _ in quad_items]
+    quad_point_queries = sample_exact_point_queries(
+        quad_points,
+        num_queries=quadtree_cfg["n_point_queries"],
+        seed=quadtree_cfg["seed"] + 1,
+    )
+    quad_range_queries = sample_point_rect_queries(
+        num_queries=quadtree_cfg["n_queries"],
+        space_width=quadtree_cfg["space_width"],
+        space_height=quadtree_cfg["space_height"],
+        max_query_width=quadtree_cfg["max_query_width"],
+        max_query_height=quadtree_cfg["max_query_height"],
+        seed=quadtree_cfg["seed"] + 2,
+    )
+    quadtree_results = compare_indexes(
+        index_factories=[
+            lambda bucket_capacity=bucket_capacity: QuadTree(
+                bucket_capacity=bucket_capacity,
+                max_depth=quadtree_cfg["max_depth"],
+            )
+            for bucket_capacity in quadtree_cfg["bucket_capacities"]
+        ],
+        items=quad_items,
+        queries=quad_point_queries,
+        workload_name="compare-quadtree-point",
+        extra_builder=lambda idx: {
+            "bucket_capacity": idx.bucket_capacity,
+            "max_depth": idx.max_depth,
+            "height": idx.height(),
+            "query_type": "point",
+        },
+    ) + compare_indexes(
+        index_factories=[
+            lambda bucket_capacity=bucket_capacity: QuadTree(
+                bucket_capacity=bucket_capacity,
+                max_depth=quadtree_cfg["max_depth"],
+            )
+            for bucket_capacity in quadtree_cfg["bucket_capacities"]
+        ],
+        items=quad_items,
+        queries=quad_range_queries,
+        workload_name="compare-quadtree-range",
+        extra_builder=lambda idx: {
+            "bucket_capacity": idx.bucket_capacity,
+            "max_depth": idx.max_depth,
+            "height": idx.height(),
+            "query_type": "rect-range",
+        },
+    )
+    return [
+        ("=== Local comparison: B+ Tree orders ===", bpt_results),
+        ("=== Local comparison: R-Tree capacities ===", rtree_results),
+        ("=== Local comparison: KD-Tree leaf capacities ===", kdtree_results),
+        ("=== Local comparison: Quadtree bucket capacities ===", quadtree_results),
+    ]

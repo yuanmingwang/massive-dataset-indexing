@@ -10,15 +10,23 @@ from treeindex.geometry.rect import Rect
 
 @dataclass
 class KDNode:
-    point: Point
-    value: Any
     axis: int
+    point: Optional[Point] = None
+    value: Any = None
     left: Optional["KDNode"] = None
     right: Optional["KDNode"] = None
+    items: Optional[List[Tuple[Point, Any]]] = None
+
+    @property
+    def is_leaf(self) -> bool:
+        return self.items is not None
 
 
 class KDTree(BaseIndex[Point, Any, Rect | Point]):
-    def __init__(self) -> None:
+    def __init__(self, leaf_capacity: int = 1) -> None:
+        if leaf_capacity < 1:
+            raise ValueError("KDTree leaf_capacity must be at least 1.")
+        self.leaf_capacity = leaf_capacity
         self.root: Optional[KDNode] = None
         self._items: List[Tuple[Point, Any]] = []
 
@@ -52,9 +60,12 @@ class KDTree(BaseIndex[Point, Any, Rect | Point]):
         def visit(node: Optional[KDNode], depth: int) -> None:
             if node is None:
                 return
-            lines.append(
-                f"depth={depth} axis={node.axis} point=({node.point.x:.3f}, {node.point.y:.3f})"
-            )
+            if node.is_leaf:
+                lines.append(f"depth={depth} axis={node.axis} leaf_items={len(node.items)}")
+            else:
+                lines.append(
+                    f"depth={depth} axis={node.axis} point=({node.point.x:.3f}, {node.point.y:.3f})"
+                )
             visit(node.left, depth + 1)
             visit(node.right, depth + 1)
 
@@ -65,19 +76,26 @@ class KDTree(BaseIndex[Point, Any, Rect | Point]):
         if not items:
             return None
         axis = depth % 2
+        if len(items) <= self.leaf_capacity:
+            return KDNode(axis=axis, items=list(items))
         sorted_items = sorted(items, key=lambda item: item[0].coord(axis))
         mid = len(sorted_items) // 2
         point, value = sorted_items[mid]
         return KDNode(
+            axis=axis,
             point=point,
             value=value,
-            axis=axis,
             left=self._build_recursive(sorted_items[:mid], depth + 1),
             right=self._build_recursive(sorted_items[mid + 1 :], depth + 1),
         )
 
     def _query_recursive(self, node: Optional[KDNode], query_rect: Rect, out: List[Any]) -> None:
         if node is None:
+            return
+        if node.is_leaf:
+            for point, value in node.items:
+                if _point_in_rect(point, query_rect):
+                    out.append(value)
             return
 
         if _point_in_rect(node.point, query_rect):
@@ -94,6 +112,11 @@ class KDTree(BaseIndex[Point, Any, Rect | Point]):
 
     def _point_query_recursive(self, node: Optional[KDNode], point: Point, out: List[Any]) -> None:
         if node is None:
+            return
+        if node.is_leaf:
+            for candidate, value in node.items:
+                if candidate == point:
+                    out.append(value)
             return
 
         if node.point == point:

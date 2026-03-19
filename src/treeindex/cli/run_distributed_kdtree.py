@@ -20,6 +20,7 @@ def main() -> None:
     parser.add_argument("--n-partitions", type=int)
     parser.add_argument("--n-point-queries", type=int)
     parser.add_argument("--n-queries", type=int)
+    parser.add_argument("--leaf-capacity", type=int)
     parser.add_argument("--seed", type=int)
     parser.add_argument("--space-width", type=float)
     parser.add_argument("--space-height", type=float)
@@ -35,6 +36,7 @@ def main() -> None:
             "n_partitions": args.n_partitions,
             "n_point_queries": args.n_point_queries,
             "n_queries": args.n_queries,
+            "leaf_capacity": args.leaf_capacity,
             "seed": args.seed,
             "space_width": args.space_width,
             "space_height": args.space_height,
@@ -71,6 +73,7 @@ def main() -> None:
             spark,
             items,
             n_partitions=config["n_partitions"],
+            leaf_capacity=config["leaf_capacity"],
             point_queries=point_queries,
             queries=queries,
         )

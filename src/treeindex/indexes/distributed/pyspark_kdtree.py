@@ -43,12 +43,13 @@ def _grid_partition_id_for_point(
 
 
 class DistributedKDTree:
-    def __init__(self, spark, n_partitions: int = 4):
+    def __init__(self, spark, n_partitions: int = 4, leaf_capacity: int = 1):
         if SparkSession is None:
             raise RuntimeError("PySpark is not available in this environment.")
         self.spark = spark
         self.sc = spark.sparkContext
         self.n_partitions = n_partitions
+        self.leaf_capacity = leaf_capacity
         self.partition_data_rdd = None
         self.partition_bounds: List[Dict[str, object]] = []
         self.global_bounds: Optional[Rect] = None
@@ -70,6 +71,7 @@ class DistributedKDTree:
         grid_cols = self.grid_cols
         n_partitions = self.n_partitions
         global_bounds = self.global_bounds
+        leaf_capacity = self.leaf_capacity
 
         def partition_id_for_point(point: Point) -> int:
             return _grid_partition_id_for_point(
@@ -95,7 +97,7 @@ class DistributedKDTree:
             # rebuild one local KD-tree from this Spark partition and emit partition
             # bounds metadata used later for driver-side query routing.
             rows = [row for _partition_key, row in iterator]
-            local_tree = KDTree()
+            local_tree = KDTree(leaf_capacity=leaf_capacity)
             if rows:
                 local_tree.build(rows)
                 xs = [point.x for point, _ in rows]
@@ -140,6 +142,7 @@ class DistributedKDTree:
             for bound in self.partition_bounds
             if bound["mbr"] is not None and bound["mbr"].contains_point(point)
         )
+        leaf_capacity = self.leaf_capacity
 
         def search_partitions(iterator: Iterator[Tuple[int, List[Tuple[Point, int]], Dict[str, object]]]):
             # Distributed point-search phase:
@@ -147,7 +150,7 @@ class DistributedKDTree:
             # search their local KD-trees for the exact point.
             for partition_id, rows, _metadata in iterator:
                 if partition_id in candidate_partitions and rows:
-                    local_tree = KDTree()
+                    local_tree = KDTree(leaf_capacity=leaf_capacity)
                     local_tree.build(rows)
                     yield from local_tree.query(point)
 
@@ -155,6 +158,7 @@ class DistributedKDTree:
 
     def range_query(self, query_rect: Rect):
         candidate_partitions = set(self._candidate_partitions_for_query(query_rect))
+        leaf_capacity = self.leaf_capacity
 
         def search_partitions(iterator: Iterator[Tuple[int, List[Tuple[Point, int]], Dict[str, object]]]):
             # Distributed range-search phase:
@@ -162,7 +166,7 @@ class DistributedKDTree:
             # and search their local KD-trees before Spark collects the answers.
             for partition_id, rows, _metadata in iterator:
                 if partition_id in candidate_partitions and rows:
-                    local_tree = KDTree()
+                    local_tree = KDTree(leaf_capacity=leaf_capacity)
                     local_tree.build(rows)
                     yield from local_tree.query(query_rect)
 
@@ -186,11 +190,12 @@ def run_distributed_kdtree_experiment(
     items: Sequence[Tuple[Point, int]],
     *,
     n_partitions: int,
+    leaf_capacity: int,
     point_queries: Sequence[Point],
     queries: Sequence[Rect],
 ) -> List[DistributedExperimentRow]:
     records_rdd = spark.sparkContext.parallelize(items, n_partitions)
-    distributed_tree = DistributedKDTree(spark=spark, n_partitions=n_partitions)
+    distributed_tree = DistributedKDTree(spark=spark, n_partitions=n_partitions, leaf_capacity=leaf_capacity)
     build_s = distributed_tree.build(records_rdd)
 
     point_start = time.perf_counter()
@@ -217,6 +222,7 @@ def run_distributed_kdtree_experiment(
             avg_results=point_total_results / len(point_queries) if point_queries else 0.0,
             extra={
                 "dims": 2,
+                "leaf_capacity": leaf_capacity,
                 "n_partitions": n_partitions,
                 "grid_rows": distributed_tree.grid_rows,
                 "grid_cols": distributed_tree.grid_cols,
@@ -236,6 +242,7 @@ def run_distributed_kdtree_experiment(
             avg_results=total_results / len(queries) if queries else 0.0,
             extra={
                 "dims": 2,
+                "leaf_capacity": leaf_capacity,
                 "n_partitions": n_partitions,
                 "grid_rows": distributed_tree.grid_rows,
                 "grid_cols": distributed_tree.grid_cols,
