@@ -1,4 +1,18 @@
 {
+  "_comment": "Documentation-only fields such as _comment and _param_help are ignored by the code.",
+  "_param_help": {
+    "n_records": "Number of key-value records generated before parallelization.",
+    "n_partitions": "Number of Spark partitions / reducer partitions used by the distributed build.",
+    "tree_order": "Local B+ tree order used inside each Spark partition.",
+    "n_point_queries": "Number of exact-key distributed point queries to benchmark.",
+    "n_range_queries": "Number of distributed key-range queries to benchmark.",
+    "seed": "Random seed for dataset generation and query sampling.",
+    "key_min": "Minimum possible generated key.",
+    "key_max": "Maximum possible generated key. Together with n_records, this controls key density.",
+    "range_low_min": "Smallest lower bound that can be generated for a range query.",
+    "range_low_max": "Largest lower bound that can be generated for a range query.",
+    "range_max_width": "Maximum width of a generated range query."
+  },
   "n_records": 2000000,
   "n_partitions": 8,
   "tree_order": 16,
@@ -6,8 +20,8 @@
   "n_range_queries": 500,
   "seed": 1,
   "key_min": 0,
-  "key_max": 1000000,
+  "key_max": 10000000,
   "range_low_min": 0,
-  "range_low_max": 900000,
-  "range_max_width": 50000
+  "range_low_max": 9000000,
+  "range_max_width": 500000
 }
