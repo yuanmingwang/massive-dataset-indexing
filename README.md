@@ -82,6 +82,15 @@ The CLI scripts only parse arguments and call reusable scenario functions. This 
 
 ## How to run
 
+This repository uses a `src/` layout, so you need to either install the package into your virtual environment or add `src/` to `PYTHONPATH` before using `python -m treeindex...`.
+
+### One-time setup
+```bash
+cd project
+python -m pip install -r requirements.txt
+python -m pip install -e .
+```
+
 ### Local demo
 ```bash
 cd project
@@ -118,6 +127,12 @@ spark-submit src/treeindex/cli/run_distributed_bplustree.py
 spark-submit src/treeindex/cli/run_distributed_rtree.py
 spark-submit src/treeindex/cli/run_distributed_kdtree.py
 spark-submit src/treeindex/cli/run_distributed_quadtree.py
+```
+
+If you do not want to install the package, you can run commands with `src` on `PYTHONPATH`:
+```bash
+cd project
+PYTHONPATH=src python -m treeindex.cli.run_local_demo
 ```
 
 ## Implementation notes
