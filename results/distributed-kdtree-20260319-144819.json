@@ -1,0 +1,60 @@
+[
+  {
+    "algorithm": "DistributedKDTree",
+    "workload": "dist-kdtree-point",
+    "n_items": 2000000,
+    "build_s": 8.114857659999998,
+    "query_total_s": 837.6904602809999,
+    "query_avg_s": 1.6753809205619998,
+    "num_queries": 500,
+    "avg_results": 1.0,
+    "extra": {
+      "dims": 2,
+      "leaf_capacity": 16,
+      "n_partitions": 8,
+      "grid_rows": 3,
+      "grid_cols": 3,
+      "directory_height_est": 3,
+      "partition_heights": [
+        15,
+        15,
+        15,
+        15,
+        15,
+        15,
+        15,
+        16
+      ],
+      "query_type": "point"
+    }
+  },
+  {
+    "algorithm": "DistributedKDTree",
+    "workload": "dist-kdtree-range",
+    "n_items": 2000000,
+    "build_s": 8.114857659999998,
+    "query_total_s": 867.1866888489999,
+    "query_avg_s": 1.7343733776979997,
+    "num_queries": 500,
+    "avg_results": 1177.066,
+    "extra": {
+      "dims": 2,
+      "leaf_capacity": 16,
+      "n_partitions": 8,
+      "grid_rows": 3,
+      "grid_cols": 3,
+      "directory_height_est": 3,
+      "partition_heights": [
+        15,
+        15,
+        15,
+        15,
+        15,
+        15,
+        15,
+        16
+      ],
+      "query_type": "rect-range"
+    }
+  }
+]

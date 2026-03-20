@@ -1,0 +1,63 @@
+=== Local B+ Tree demo ===
+algorithm | workload     | n_items | build_s  | query_total_s | query_avg_s | num_queries | avg_results | extra                               
+----------+--------------+---------+----------+---------------+-------------+-------------+-------------+-------------------------------------
+BPlusTree | bptree-point | 20000   | 0.013139 | 0.000217      | 0.00000043  | 500         | 1.006       | {'order': 16, 'query_type': 'point'}
+BPlusTree | bptree-range | 20000   | 0.011333 | 0.013978      | 0.00002796  | 500         | 497.804     | {'order': 16, 'query_type': 'range'}
+
+=== Local R-Tree demo ===
+algorithm | workload           | n_items | build_s  | query_total_s | query_avg_s | num_queries | avg_results | extra                                                 
+----------+--------------------+---------+----------+---------------+-------------+-------------+-------------+-------------------------------------------------------
+RTree     | rtree-point        | 20000   | 0.875859 | 0.011398      | 0.00002280  | 500         | 1.686       | {'max_entries': 16, 'query_type': 'point-location'}   
+RTree     | rtree-intersection | 20000   | 0.886754 | 0.016774      | 0.00003355  | 500         | 24.322      | {'max_entries': 16, 'query_type': 'rect-intersection'}
+
+=== Local KD-Tree demo ===
+algorithm | workload     | n_items | build_s  | query_total_s | query_avg_s | num_queries | avg_results | extra                                                       
+----------+--------------+---------+----------+---------------+-------------+-------------+-------------+-------------------------------------------------------------
+KDTree    | kdtree-point | 20000   | 0.025860 | 0.001669      | 0.00000334  | 500         | 1.000       | {'dims': 2, 'leaf_capacity': 16, 'query_type': 'point'}     
+KDTree    | kdtree-range | 20000   | 0.026375 | 0.003705      | 0.00000741  | 500         | 11.770      | {'dims': 2, 'leaf_capacity': 16, 'query_type': 'rect-range'}
+
+=== Local Quadtree demo ===
+algorithm | workload       | n_items | build_s  | query_total_s | query_avg_s | num_queries | avg_results | extra                                                               
+----------+----------------+---------+----------+---------------+-------------+-------------+-------------+---------------------------------------------------------------------
+QuadTree  | quadtree-point | 20000   | 0.023511 | 0.001233      | 0.00000247  | 500         | 1.000       | {'bucket_capacity': 16, 'max_depth': 20, 'query_type': 'point'}     
+QuadTree  | quadtree-range | 20000   | 0.021745 | 0.003781      | 0.00000756  | 500         | 11.770      | {'bucket_capacity': 16, 'max_depth': 20, 'query_type': 'rect-range'}
+
+=== Local comparison: B+ Tree orders ===
+algorithm | workload          | n_items | build_s  | query_total_s | query_avg_s | num_queries | avg_results | extra                                            
+----------+-------------------+---------+----------+---------------+-------------+-------------+-------------+--------------------------------------------------
+BPlusTree | compare-bpt-point | 2000000 | 6.369991 | 0.001581      | 0.00000316  | 500         | 1.184       | {'order': 16, 'height': 6, 'query_type': 'point'}
+BPlusTree | compare-bpt-point | 2000000 | 4.014984 | 0.001138      | 0.00000228  | 500         | 1.184       | {'order': 32, 'height': 5, 'query_type': 'point'}
+BPlusTree | compare-bpt-point | 2000000 | 4.027201 | 0.001076      | 0.00000215  | 500         | 1.184       | {'order': 64, 'height': 4, 'query_type': 'point'}
+BPlusTree | compare-bpt-range | 2000000 | 5.342212 | 9.201751      | 0.01840350  | 500         | 49736.488   | {'order': 16, 'height': 6, 'query_type': 'range'}
+BPlusTree | compare-bpt-range | 2000000 | 4.239321 | 8.738339      | 0.01747668  | 500         | 49736.488   | {'order': 32, 'height': 5, 'query_type': 'range'}
+BPlusTree | compare-bpt-range | 2000000 | 4.216806 | 8.322456      | 0.01664491  | 500         | 49736.488   | {'order': 64, 'height': 4, 'query_type': 'range'}
+
+=== Local comparison: R-Tree capacities ===
+algorithm | workload               | n_items | build_s    | query_total_s | query_avg_s | num_queries | avg_results | extra                                                              
+----------+------------------------+---------+------------+---------------+-------------+-------------+-------------+--------------------------------------------------------------------
+RTree     | compare-rtree-point    | 2000000 | 167.302551 | 0.378955      | 0.00075791  | 500         | 72.570      | {'max_entries': 16, 'height': 6, 'query_type': 'point-location'}   
+RTree     | compare-rtree-point    | 2000000 | 279.020612 | 0.803354      | 0.00160671  | 500         | 72.570      | {'max_entries': 32, 'height': 5, 'query_type': 'point-location'}   
+RTree     | compare-rtree-point    | 2000000 | 412.587632 | 1.002476      | 0.00200495  | 500         | 72.570      | {'max_entries': 64, 'height': 4, 'query_type': 'point-location'}   
+RTree     | compare-rtree-capacity | 2000000 | 191.721077 | 1.916346      | 0.00383269  | 500         | 2458.320    | {'max_entries': 16, 'height': 6, 'query_type': 'rect-intersection'}
+RTree     | compare-rtree-capacity | 2000000 | 281.168694 | 2.070322      | 0.00414064  | 500         | 2458.320    | {'max_entries': 32, 'height': 5, 'query_type': 'rect-intersection'}
+RTree     | compare-rtree-capacity | 2000000 | 420.170775 | 2.787002      | 0.00557400  | 500         | 2458.320    | {'max_entries': 64, 'height': 4, 'query_type': 'rect-intersection'}
+
+=== Local comparison: KD-Tree leaf capacities ===
+algorithm | workload             | n_items | build_s   | query_total_s | query_avg_s | num_queries | avg_results | extra                                                          
+----------+----------------------+---------+-----------+---------------+-------------+-------------+-------------+----------------------------------------------------------------
+KDTree    | compare-kdtree-point | 2000000 | 14.674220 | 0.007347      | 0.00001469  | 500         | 1.000       | {'leaf_capacity': 16, 'height': 18, 'query_type': 'point'}     
+KDTree    | compare-kdtree-point | 2000000 | 12.824367 | 0.010155      | 0.00002031  | 500         | 1.000       | {'leaf_capacity': 32, 'height': 17, 'query_type': 'point'}     
+KDTree    | compare-kdtree-point | 2000000 | 12.559349 | 0.015140      | 0.00003028  | 500         | 1.000       | {'leaf_capacity': 64, 'height': 16, 'query_type': 'point'}     
+KDTree    | compare-kdtree-range | 2000000 | 13.402278 | 0.364049      | 0.00072810  | 500         | 1177.066    | {'leaf_capacity': 16, 'height': 18, 'query_type': 'rect-range'}
+KDTree    | compare-kdtree-range | 2000000 | 12.643071 | 0.340437      | 0.00068087  | 500         | 1177.066    | {'leaf_capacity': 32, 'height': 17, 'query_type': 'rect-range'}
+KDTree    | compare-kdtree-range | 2000000 | 12.446946 | 0.364286      | 0.00072857  | 500         | 1177.066    | {'leaf_capacity': 64, 'height': 16, 'query_type': 'rect-range'}
+
+=== Local comparison: Quadtree bucket capacities ===
+algorithm | workload               | n_items | build_s  | query_total_s | query_avg_s | num_queries | avg_results | extra                                                                             
+----------+------------------------+---------+----------+---------------+-------------+-------------+-------------+-----------------------------------------------------------------------------------
+QuadTree  | compare-quadtree-point | 2000000 | 8.154853 | 0.003849      | 0.00000770  | 500         | 1.000       | {'bucket_capacity': 16, 'max_depth': 20, 'height': 11, 'query_type': 'point'}     
+QuadTree  | compare-quadtree-point | 2000000 | 5.099118 | 0.005900      | 0.00001180  | 500         | 1.000       | {'bucket_capacity': 32, 'max_depth': 20, 'height': 10, 'query_type': 'point'}     
+QuadTree  | compare-quadtree-point | 2000000 | 4.494859 | 0.008702      | 0.00001740  | 500         | 1.000       | {'bucket_capacity': 64, 'max_depth': 20, 'height': 9, 'query_type': 'point'}      
+QuadTree  | compare-quadtree-range | 2000000 | 6.100955 | 0.384930      | 0.00076986  | 500         | 1177.066    | {'bucket_capacity': 16, 'max_depth': 20, 'height': 11, 'query_type': 'rect-range'}
+QuadTree  | compare-quadtree-range | 2000000 | 6.124244 | 0.383098      | 0.00076620  | 500         | 1177.066    | {'bucket_capacity': 32, 'max_depth': 20, 'height': 10, 'query_type': 'rect-range'}
+QuadTree  | compare-quadtree-range | 2000000 | 4.636203 | 0.383503      | 0.00076701  | 500         | 1177.066    | {'bucket_capacity': 64, 'max_depth': 20, 'height': 9, 'query_type': 'rect-range'}

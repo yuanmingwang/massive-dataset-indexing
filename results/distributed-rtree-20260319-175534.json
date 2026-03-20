@@ -1,0 +1,58 @@
+[
+  {
+    "algorithm": "DistributedRTree",
+    "workload": "dist-rtree-point",
+    "n_items": 2000000,
+    "build_s": 102.50153462200001,
+    "query_total_s": 306.598313889,
+    "query_avg_s": 61.3196627778,
+    "num_queries": 5,
+    "avg_results": 74.8,
+    "extra": {
+      "max_entries": 16,
+      "n_partitions": 8,
+      "grid_rows": 3,
+      "grid_cols": 3,
+      "directory_height_est": 1,
+      "partition_heights": [
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        6
+      ],
+      "query_type": "point-location"
+    }
+  },
+  {
+    "algorithm": "DistributedRTree",
+    "workload": "dist-rtree-intersection",
+    "n_items": 2000000,
+    "build_s": 102.50153462200001,
+    "query_total_s": 250.019880332,
+    "query_avg_s": 50.0039760664,
+    "num_queries": 5,
+    "avg_results": 2525.4,
+    "extra": {
+      "max_entries": 16,
+      "n_partitions": 8,
+      "grid_rows": 3,
+      "grid_cols": 3,
+      "directory_height_est": 1,
+      "partition_heights": [
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        6
+      ],
+      "query_type": "rect-intersection"
+    }
+  }
+]

@@ -1,0 +1,5 @@
+=== Distributed MapReduce-style / PySpark B+ Tree experiment ===
+algorithm            | workload          | n_items | build_s  | query_total_s | query_avg_s | num_queries | avg_results | extra                                                                                                     
+---------------------+-------------------+---------+----------+---------------+-------------+-------------+-------------+-----------------------------------------------------------------------------------------------------------
+DistributedBPlusTree | dist-bptree-point | 2000000 | 3.844696 | 249.631098    | 0.49926220  | 500         | 1.184       | {'order': 16, 'n_partitions': 8, 'directory_height_est': 1, 'partition_heights': [6, 6, 6, 6, 6, 6, 6, 6]}
+DistributedBPlusTree | dist-bptree-range | 2000000 | 3.844696 | 256.083411    | 0.51216682  | 500         | 49736.488   | {'order': 16, 'n_partitions': 8, 'directory_height_est': 1, 'partition_heights': [6, 6, 6, 6, 6, 6, 6, 6]}

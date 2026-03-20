@@ -1,0 +1,52 @@
+[
+  {
+    "algorithm": "DistributedBPlusTree",
+    "workload": "dist-bptree-point",
+    "n_items": 2000000,
+    "build_s": 3.8446960920000492,
+    "query_total_s": 249.63109837699994,
+    "query_avg_s": 0.4992621967539999,
+    "num_queries": 500,
+    "avg_results": 1.184,
+    "extra": {
+      "order": 16,
+      "n_partitions": 8,
+      "directory_height_est": 1,
+      "partition_heights": [
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6
+      ]
+    }
+  },
+  {
+    "algorithm": "DistributedBPlusTree",
+    "workload": "dist-bptree-range",
+    "n_items": 2000000,
+    "build_s": 3.8446960920000492,
+    "query_total_s": 256.08341135,
+    "query_avg_s": 0.5121668227,
+    "num_queries": 500,
+    "avg_results": 49736.488,
+    "extra": {
+      "order": 16,
+      "n_partitions": 8,
+      "directory_height_est": 1,
+      "partition_heights": [
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6
+      ]
+    }
+  }
+]

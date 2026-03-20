@@ -1,0 +1,58 @@
+[
+  {
+    "algorithm": "DistributedQuadTree",
+    "workload": "dist-quadtree-point",
+    "n_items": 2000000,
+    "build_s": 11.794788506000032,
+    "query_total_s": 2078.45000869,
+    "query_avg_s": 4.15690001738,
+    "num_queries": 500,
+    "avg_results": 1.0,
+    "extra": {
+      "bucket_capacity": 32,
+      "max_depth": 16,
+      "n_partitions": 8,
+      "partition_depth": 2,
+      "directory_height_est": 2,
+      "partition_heights": [
+        8,
+        8,
+        8,
+        8,
+        8,
+        8,
+        8,
+        10
+      ],
+      "query_type": "point"
+    }
+  },
+  {
+    "algorithm": "DistributedQuadTree",
+    "workload": "dist-quadtree-range",
+    "n_items": 2000000,
+    "build_s": 11.794788506000032,
+    "query_total_s": 2082.356137938,
+    "query_avg_s": 4.164712275876,
+    "num_queries": 500,
+    "avg_results": 1177.066,
+    "extra": {
+      "bucket_capacity": 32,
+      "max_depth": 16,
+      "n_partitions": 8,
+      "partition_depth": 2,
+      "directory_height_est": 2,
+      "partition_heights": [
+        8,
+        8,
+        8,
+        8,
+        8,
+        8,
+        8,
+        10
+      ],
+      "query_type": "rect-range"
+    }
+  }
+]
