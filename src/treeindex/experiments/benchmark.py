@@ -48,6 +48,29 @@ def run_single_experiment(*, index_factory, items, queries, workload_name: str, 
     )
 
 
+def run_experiments_with_shared_build(*, index_factory, items, query_batches):
+    index = index_factory()
+    build_stats = benchmark_build(index, items)
+    results = []
+    for batch in query_batches:
+        query_stats = benchmark_queries(index, batch["queries"])
+        results.append(
+            ExperimentResult(
+                algorithm=index.name,
+                workload=batch["workload_name"],
+                n_items=len(items),
+                build_seconds=build_stats.total_seconds,
+                query_total_seconds=query_stats.total_seconds,
+                query_avg_seconds=query_stats.avg_seconds,
+                num_queries=query_stats.num_queries,
+                total_results=query_stats.total_results,
+                avg_results=query_stats.avg_results,
+                extra=batch.get("extra", {}),
+            )
+        )
+    return results
+
+
 def compare_indexes(*, index_factories, items, queries, workload_name: str, extra_builder=None):
     results = []
     for factory in index_factories:
@@ -69,4 +92,29 @@ def compare_indexes(*, index_factories, items, queries, workload_name: str, extr
                 extra=extra,
             )
         )
+    return results
+
+
+def compare_indexes_with_shared_build(*, index_factories, items, query_batches, extra_builder=None):
+    results = []
+    for factory in index_factories:
+        index = factory()
+        build_stats = benchmark_build(index, items)
+        for batch in query_batches:
+            query_stats = benchmark_queries(index, batch["queries"])
+            extra = extra_builder(index, batch) if extra_builder else {}
+            results.append(
+                ExperimentResult(
+                    algorithm=index.name,
+                    workload=batch["workload_name"],
+                    n_items=len(items),
+                    build_seconds=build_stats.total_seconds,
+                    query_total_seconds=query_stats.total_seconds,
+                    query_avg_seconds=query_stats.avg_seconds,
+                    num_queries=query_stats.num_queries,
+                    total_results=query_stats.total_results,
+                    avg_results=query_stats.avg_results,
+                    extra=extra,
+                )
+            )
     return results

@@ -128,7 +128,7 @@ class DistributedQuadTree:
                     "mbr": None,
                     "height": 0,
                 }
-            yield (partition_id, rows, metadata)
+            yield (partition_id, local_tree, metadata)
 
         self.partition_data_rdd = partitioned.mapPartitionsWithIndex(prepare_partition)
         if StorageLevel is not None:
@@ -155,34 +155,24 @@ class DistributedQuadTree:
             for bound in self.partition_bounds
             if bound["mbr"] is not None and bound["mbr"].contains_point(point)
         )
-        bucket_capacity = self.bucket_capacity
-        max_depth = self.max_depth
-
-        def search_partitions(iterator: Iterator[Tuple[int, List[Tuple[Point, int]], Dict[str, object]]]):
+        def search_partitions(iterator: Iterator[Tuple[int, QuadTree, Dict[str, object]]]):
             # Distributed point-search phase:
             # after driver-side routing with partition MBRs, only candidate partitions
             # rebuild and search their local Quadtrees for the target point.
-            for partition_id, rows, _metadata in iterator:
-                if partition_id in candidate_partitions and rows:
-                    local_tree = QuadTree(bucket_capacity=bucket_capacity, max_depth=max_depth)
-                    local_tree.build(rows)
+            for partition_id, local_tree, _metadata in iterator:
+                if partition_id in candidate_partitions and len(local_tree):
                     yield from local_tree.query(point)
 
         return self.partition_data_rdd.mapPartitions(search_partitions).collect()
 
     def range_query(self, query_rect: Rect):
         candidate_partitions = set(self._candidate_partitions_for_query(query_rect))
-        bucket_capacity = self.bucket_capacity
-        max_depth = self.max_depth
-
-        def search_partitions(iterator: Iterator[Tuple[int, List[Tuple[Point, int]], Dict[str, object]]]):
+        def search_partitions(iterator: Iterator[Tuple[int, QuadTree, Dict[str, object]]]):
             # Distributed range-search phase:
             # only partitions whose partition MBR intersects the query rectangle rebuild
             # and search their local Quadtrees before Spark collects the matches.
-            for partition_id, rows, _metadata in iterator:
-                if partition_id in candidate_partitions and rows:
-                    local_tree = QuadTree(bucket_capacity=bucket_capacity, max_depth=max_depth)
-                    local_tree.build(rows)
+            for partition_id, local_tree, _metadata in iterator:
+                if partition_id in candidate_partitions and len(local_tree):
                     yield from local_tree.query(query_rect)
 
         return self.partition_data_rdd.mapPartitions(search_partitions).collect()

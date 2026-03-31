@@ -38,6 +38,10 @@ class DistributedRTreePartitioningTest(unittest.TestCase):
 
 
 class RTreeLocalPointQueryTest(unittest.TestCase):
+    def test_generated_rectangles_include_two_attributes(self) -> None:
+        items = generate_rectangles(10, seed=9)
+        self.assertTrue(all(hasattr(record, "attr1") and hasattr(record, "attr2") for _rect, record in items))
+
     def test_point_query_matches_containment(self) -> None:
         items = [
             (Rect(0.0, 0.0, 2.0, 2.0), 1),
@@ -96,6 +100,9 @@ class DistributedRTreeSparkTest(unittest.TestCase):
                 sorted(local_tree.query(query)),
                 sorted(distributed_tree.point_query(query)),
             )
+            matches = distributed_tree.point_query(query)
+            if matches:
+                self.assertTrue(all(hasattr(record, "attr1") and hasattr(record, "attr2") for record in matches))
 
         for query in queries:
             self.assertEqual(

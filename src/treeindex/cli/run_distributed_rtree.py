@@ -24,6 +24,10 @@ def main() -> None:
     parser.add_argument("--seed", type=int)
     parser.add_argument("--space-width", type=float)
     parser.add_argument("--space-height", type=float)
+    parser.add_argument("--attr1-min", type=int)
+    parser.add_argument("--attr1-max", type=int)
+    parser.add_argument("--attr2-min", type=int)
+    parser.add_argument("--attr2-max", type=int)
     parser.add_argument("--max-rect-width", type=float)
     parser.add_argument("--max-rect-height", type=float)
     parser.add_argument("--max-query-width", type=float)
@@ -42,6 +46,10 @@ def main() -> None:
             "seed": args.seed,
             "space_width": args.space_width,
             "space_height": args.space_height,
+            "attr1_min": args.attr1_min,
+            "attr1_max": args.attr1_max,
+            "attr2_min": args.attr2_min,
+            "attr2_max": args.attr2_max,
             "max_rect_width": args.max_rect_width,
             "max_rect_height": args.max_rect_height,
             "max_query_width": args.max_query_width,
@@ -60,6 +68,10 @@ def main() -> None:
             space_height=config["space_height"],
             max_rect_width=config["max_rect_width"],
             max_rect_height=config["max_rect_height"],
+            attr1_min=config["attr1_min"],
+            attr1_max=config["attr1_max"],
+            attr2_min=config["attr2_min"],
+            attr2_max=config["attr2_max"],
             seed=config["seed"],
         )
         point_queries = sample_rect_point_queries(

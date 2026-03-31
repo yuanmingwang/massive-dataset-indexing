@@ -7,6 +7,10 @@
   "seed": 1,
   "key_min": 0,
   "key_max": 10000000,
+  "attr1_min": 0,
+  "attr1_max": 10000000,
+  "attr2_min": 0,
+  "attr2_max": 10000000,
   "range_low_min": 0,
   "range_low_max": 9000000,
   "range_max_width": 500000

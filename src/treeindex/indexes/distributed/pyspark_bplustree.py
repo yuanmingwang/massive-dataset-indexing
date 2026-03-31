@@ -3,7 +3,7 @@ from __future__ import annotations
 import math
 import time
 from bisect import bisect_right
-from typing import Dict, Iterator, List, Optional, Sequence, Tuple
+from typing import Any, Dict, Iterator, List, Optional, Sequence, Tuple
 
 from treeindex.core.interfaces import DistributedIndex
 from treeindex.indexes.distributed.base import DistributedExperimentRow
@@ -55,22 +55,22 @@ class DistributedBPlusTree(DistributedIndex):
         if StorageLevel is not None:
             partitioned.persist(StorageLevel.MEMORY_AND_DISK)
 
-        def prepare_partition(partition_id: int, iterator: Iterator[Tuple[int, int]]):
+        def prepare_partition(partition_id: int, iterator: Iterator[Tuple[int, Any]]):
             # Reduce/build phase:
             # this function runs once per Spark partition, rebuilds one local B+ tree
             # from that partition's rows, and emits compact metadata for driver routing.
             rows = list(iterator)
             rows.sort(key=lambda x: x[0])
-            tmp_tree = BPlusTree(order=tree_order)
-            tmp_tree.build(rows)
+            local_tree = BPlusTree(order=tree_order)
+            local_tree.build(rows)
             metadata = {
                 "partition_id": partition_id,
                 "n_items": len(rows),
                 "min_key": rows[0][0] if rows else None,
                 "max_key": rows[-1][0] if rows else None,
-                "height": tmp_tree.height() if rows else 0,
+                "height": local_tree.height() if rows else 0,
             }
-            yield (partition_id, rows, metadata)
+            yield (partition_id, local_tree, metadata)
 
         self.partition_data_rdd = partitioned.mapPartitionsWithIndex(prepare_partition)
         if StorageLevel is not None:
@@ -97,32 +97,26 @@ class DistributedBPlusTree(DistributedIndex):
 
     def point_query(self, key: int):
         target_partition = self._route_partition_for_key(key)
-        tree_order = self.tree_order
 
         def search_partition(iterator):
             # Distributed point-search phase:
             # Spark scans reducer partitions, but only the routed partition rebuilds and
             # searches its local B+ tree for the target key.
-            for partition_id, rows, _metadata in iterator:
+            for partition_id, local_tree, _metadata in iterator:
                 if partition_id == target_partition:
-                    local_tree = BPlusTree(order=tree_order)
-                    local_tree.build(rows)
                     yield from local_tree.search(key)
 
         return self.partition_data_rdd.mapPartitions(search_partition).collect()
 
     def range_query(self, low: int, high: int):
         candidate_partitions = set(self._candidate_partitions_for_range(low, high))
-        tree_order = self.tree_order
 
         def search_partitions(iterator):
             # Distributed range-search phase:
             # only partitions whose key interval overlaps [low, high] rebuild a local
             # B+ tree and contribute matches back to the driver.
-            for partition_id, rows, _metadata in iterator:
+            for partition_id, local_tree, _metadata in iterator:
                 if partition_id in candidate_partitions:
-                    local_tree = BPlusTree(order=tree_order)
-                    local_tree.build(rows)
                     yield from local_tree.range_search(low, high)
 
         return self.partition_data_rdd.mapPartitions(search_partitions).collect()
@@ -139,12 +133,13 @@ class DistributedBPlusTree(DistributedIndex):
 
 def run_distributed_experiment(
     spark,
-    items: Sequence[Tuple[int, int]],
+    items: Sequence[Tuple[int, Any]],
     *,
     tree_order: int,
     n_partitions: int,
     point_queries: Sequence[int],
     range_queries: Sequence[Tuple[int, int]],
+    attribute_name: str = "key",
 ) -> List[DistributedExperimentRow]:
     records_rdd = spark.sparkContext.parallelize(items, n_partitions)
     distributed_tree = DistributedBPlusTree(spark=spark, tree_order=tree_order, n_partitions=n_partitions)
@@ -165,7 +160,7 @@ def run_distributed_experiment(
     return [
         DistributedExperimentRow(
             algorithm="DistributedBPlusTree",
-            workload="dist-bptree-point",
+            workload=f"dist-bptree-{attribute_name}-point",
             n_items=len(items),
             build_s=build_s,
             query_total_s=point_total_s,
@@ -175,13 +170,14 @@ def run_distributed_experiment(
             extra={
                 "order": tree_order,
                 "n_partitions": n_partitions,
+                "indexed_attribute": attribute_name,
                 "directory_height_est": distributed_tree.directory_height_estimate(),
                 "partition_heights": [b["height"] for b in distributed_tree.partition_bounds],
             },
         ),
         DistributedExperimentRow(
             algorithm="DistributedBPlusTree",
-            workload="dist-bptree-range",
+            workload=f"dist-bptree-{attribute_name}-range",
             n_items=len(items),
             build_s=build_s,
             query_total_s=range_total_s,
@@ -191,6 +187,7 @@ def run_distributed_experiment(
             extra={
                 "order": tree_order,
                 "n_partitions": n_partitions,
+                "indexed_attribute": attribute_name,
                 "directory_height_est": distributed_tree.directory_height_estimate(),
                 "partition_heights": [b["height"] for b in distributed_tree.partition_bounds],
             },

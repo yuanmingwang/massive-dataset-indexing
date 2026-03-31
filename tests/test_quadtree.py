@@ -16,6 +16,10 @@ from treeindex.indexes.local.quadtree import QuadTree
 
 
 class QuadTreeLocalTest(unittest.TestCase):
+    def test_generated_points_include_two_attributes(self) -> None:
+        items = generate_points(10, seed=6)
+        self.assertTrue(all(hasattr(record, "attr1") and hasattr(record, "attr2") for _point, record in items))
+
     def test_point_query_matches_exact_values(self) -> None:
         items = [
             (Point(1.0, 1.0), 1),
@@ -112,6 +116,9 @@ class QuadTreeSparkTest(unittest.TestCase):
                 sorted(local_tree.query(query)),
                 sorted(distributed_tree.point_query(query)),
             )
+            matches = distributed_tree.point_query(query)
+            if matches:
+                self.assertTrue(all(hasattr(record, "attr1") and hasattr(record, "attr2") for record in matches))
 
         for query in queries:
             self.assertEqual(

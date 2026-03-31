@@ -23,6 +23,10 @@ def main() -> None:
     parser.add_argument("--seed", type=int)
     parser.add_argument("--space-width", type=float)
     parser.add_argument("--space-height", type=float)
+    parser.add_argument("--attr1-min", type=int)
+    parser.add_argument("--attr1-max", type=int)
+    parser.add_argument("--attr2-min", type=int)
+    parser.add_argument("--attr2-max", type=int)
     parser.add_argument("--max-query-width", type=float)
     parser.add_argument("--max-query-height", type=float)
     parser.add_argument("--bucket-capacity", type=int)
@@ -40,6 +44,10 @@ def main() -> None:
             "seed": args.seed,
             "space_width": args.space_width,
             "space_height": args.space_height,
+            "attr1_min": args.attr1_min,
+            "attr1_max": args.attr1_max,
+            "attr2_min": args.attr2_min,
+            "attr2_max": args.attr2_max,
             "max_query_width": args.max_query_width,
             "max_query_height": args.max_query_height,
             "bucket_capacity": args.bucket_capacity,
@@ -56,6 +64,10 @@ def main() -> None:
             config["n_items"],
             space_width=config["space_width"],
             space_height=config["space_height"],
+            attr1_min=config["attr1_min"],
+            attr1_max=config["attr1_max"],
+            attr2_min=config["attr2_min"],
+            attr2_max=config["attr2_max"],
             seed=config["seed"],
         )
         point_queries = sample_exact_point_queries(

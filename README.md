@@ -140,7 +140,7 @@ PYTHONPATH=src python -m treeindex.cli.run_local_demo
 ### Centralized local trees
 
 1. Data generation:
-   Each local demo creates synthetic data first, then samples queries from that dataset so the workloads are valid. `BPlusTree` uses `generate_key_value_pairs(...)` plus `sample_point_queries(...)` and `sample_range_queries(...)`. `RTree` uses `generate_rectangles(...)` plus `sample_rect_point_queries(...)` and `sample_rect_queries(...)`. `KDTree` and `QuadTree` use `generate_points(...)` plus `sample_exact_point_queries(...)` and `sample_point_rect_queries(...)`.
+   Each local demo creates synthetic data first, then samples queries from that dataset so the workloads are valid. All generated records now carry a primary `record_id` plus two extra attributes, `attr1` and `attr2`. `BPlusTree` uses `generate_key_value_pairs(...)` to create records keyed by `key`, then projects those records onto `key`, `attr1`, and `attr2` for point and range workloads. `RTree` uses `generate_rectangles(...)` plus `sample_rect_point_queries(...)` and `sample_rect_queries(...)`. `KDTree` and `QuadTree` use `generate_points(...)` plus `sample_exact_point_queries(...)` and `sample_point_rect_queries(...)`.
 2. Index/tree construction:
    Each local structure is built entirely in memory. `BPlusTree` is built by repeated insertions with node splits. `RTree` is built by repeated rectangle insertion with subtree selection and MBR updates. `KDTree` is built recursively by alternating split axes and choosing median points. `QuadTree` starts from one bounding box and subdivides into four children when a bucket overflows.
 3. Point searching and range query:
@@ -157,7 +157,7 @@ All distributed demos follow the same overall pattern: Spark maps each record to
 - Reduce / build:
   Each reducer receives one key-range partition, sorts the rows by key, rebuilds a local `BPlusTree`, and emits metadata such as `min_key`, `max_key`, item count, and local tree height.
 - Query:
-  The driver uses the collected partition boundaries as a lightweight directory. A point query routes to exactly one partition. A range query routes to every partition whose key interval overlaps `[low, high]`. Those partitions rebuild/search their local B+ trees, and Spark collects the matching rows.
+  The driver uses the collected partition boundaries as a lightweight directory. For each indexed attribute (`key`, `attr1`, and `attr2`), a point query routes to exactly one partition and a range query routes to every partition whose interval overlaps `[low, high]`. Those partitions rebuild/search their local B+ trees, and Spark collects the matching rows.
 
 #### Distributed R-Tree
 
@@ -203,6 +203,8 @@ The demos now read their default parameters from JSON config files in `configs/`
 Shared parameters:
 - `n_items` / `n_records`: number of generated records before building the index.
 - `seed`: base random seed for reproducible data generation and query sampling.
+- `attr1_min`, `attr1_max`: minimum and maximum generated values for the first extra record attribute.
+- `attr2_min`, `attr2_max`: minimum and maximum generated values for the second extra record attribute.
 - `n_point_queries`: number of exact point or point-location queries to run.
 - `n_queries`: number of spatial range/intersection queries to run.
 - `n_range_queries`: number of B+ tree key-range queries to run.
